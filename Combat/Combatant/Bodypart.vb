@@ -95,7 +95,7 @@
     End Property
 
     Private _Attack As Attack
-    Private Property Attack As Attack
+    Public Property Attack As Attack
         Get
             Return _Attack
         End Get

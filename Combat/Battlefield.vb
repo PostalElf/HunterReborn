@@ -120,6 +120,26 @@
             End If
         End While
     End Sub
+    Public Function GetTargetsWithinRange(ByVal attacker As Combatant, ByVal attack As Attack) As List(Of Combatant)
+        Dim minRange As Integer = attacker.BattlefieldPosition + attack.MinRange
+        If minRange < 0 Then minRange = 0
+        If minRange > ePosition.Back Then minRange = ePosition.Back
+        Dim maxRange As Integer = attacker.BattlefieldPosition + attack.MaxRange
+        If maxRange < 0 Then maxRange = 0
+        If maxRange > ePosition.Back Then maxRange = ePosition.Back
+
+        Dim total As New List(Of Combatant)
+        For n = minRange To maxRange
+            If TypeOf attacker Is CombatantAI Then
+                total.AddRange(Attackers(n))
+            ElseIf TypeOf attacker Is CombatantPlayer Then
+                total.AddRange(Defenders(n))
+            Else
+                Throw New Exception("Unrecognised combatant type")
+            End If
+        Next
+        Return total
+    End Function
 #End Region
 
 End Class
