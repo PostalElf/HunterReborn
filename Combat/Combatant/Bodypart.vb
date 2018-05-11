@@ -1,17 +1,17 @@
 ﻿Public Class Bodypart
 #Region "Constructors"
-    Public Shared Function Construct(ByVal rawdata As List(Of String), Optional ByVal attack As Attack = Nothing) As Bodypart
+    Public Shared Function Construct(ByVal rawdata As Queue(Of String)) As Bodypart
         Dim bp As New Bodypart
-        For Each l As String In rawdata
-            Dim ln As String() = l.Split(":")
+        rawdata.Dequeue()         'remove header
+        While rawdata.Count > 0
+            Dim ln As String() = rawdata.Dequeue.Split(":")
             Dim header As String = ln(0).Trim
             Dim entry As String = ln(1).Trim
             bp.Construct(header, entry)
-        Next
-        If attack Is Nothing = False Then bp.Attack = attack
+        End While
         Return bp
     End Function
-    Private Sub Construct(ByVal header As String, ByVal entry As String)
+    Public Sub Construct(ByVal header As String, ByVal entry As String)
         Select Case header
             Case "Name" : _Name = entry
             Case "Weight" : _BonusWeight = CInt(entry)
@@ -25,7 +25,7 @@
             Case "Health" : Health = CInt(entry)
             Case "ShockAbsorb" : ShockAbsorb = CDbl(entry)
             Case "ShockLoss" : _ShockLoss = CInt(entry)
-            Case "Attack" : Attack = Attack.construct(entry)
+            Case "Attack" : Attack = Attack.Construct(entry)
         End Select
     End Sub
 #End Region
@@ -37,16 +37,17 @@
             Return _Name
         End Get
     End Property
+    Public Owner As Combatant
+
     Public Overrides Function ToString() As String
         Return Name
     End Function
 #End Region
 
 #Region "Events"
-    Public Event PerformsMove(ByVal mover As Combatant)
-    Public Event PerformsAttack(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart)
-    Public Event IsAttacked(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart)
-    Public Event IsDestroyed(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant)
+    Public Event IsMissed(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart)
+    Public Event IsHit(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart, ByVal isFullHit As Boolean)
+    Public Event IsDestroyed(ByVal target As Combatant, ByVal targetBp As Bodypart)
 #End Region
 
 #Region "Combatant Bonuses"
@@ -113,9 +114,47 @@
             Return True
         End Get
     End Property
+#End Region
 
     Public Sub Tick()
         If AttackCooldown > 0 Then AttackCooldown -= 1
     End Sub
-#End Region
+    Public Sub IsAttacked(ByVal attacker As Combatant, ByVal attack As Attack)
+        Dim roll As Integer = Rng.Next(1, 101)
+        If roll <= attack.Accuracy - Owner.dodge - Agility Then
+            'attack hits; roll for penetration
+            Dim damage As Integer
+            Dim isFullHit As Boolean
+            roll = Rng.Next(1, 101)
+            If roll <= attack.Penetration - Armour Then
+                'full hit
+                damage = attack.DamageFull
+                isFullHit = True
+            Else
+                'glancing hit
+                damage = attack.DamageGlancing
+                isFullHit = False
+            End If
+
+            'apply damage
+            Health -= damage
+            RaiseEvent IsHit(attacker, attack, Owner, Me, isFullHit)
+
+            'apply shock
+            Dim shock As Integer = Convert.ToInt32(damage * ShockAbsorb)
+            If shock <= 0 Then shock = 1
+            Owner.shock += shock
+
+            'check for bodypart destruction
+            If Health <= 0 Then
+                Dim formerOwner As Combatant = Owner
+                Owner.Remove(Me)
+                RaiseEvent IsDestroyed(formerOwner, Me)
+                Owner.shock += ShockLoss
+            End If
+        Else
+            'attack misses
+            RaiseEvent IsMissed(attacker, attack, Owner, Me)
+        End If
+    End Sub
 End Class

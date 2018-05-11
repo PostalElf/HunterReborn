@@ -37,6 +37,12 @@
 
 #Region "Properties"
     Public Bodypart As Bodypart
+    Public ReadOnly Property Ready As Boolean
+        Get
+            If Bodypart Is Nothing Then Return False
+            Return Bodypart.AttackReady
+        End Get
+    End Property
 
     Public Name As String
     Public MinRange As Integer

@@ -1,5 +1,5 @@
 ﻿Public Class Battlefield
-    Private Sub New()
+    Public Sub New()
         For Each ePosition In [Enum].GetValues(GetType(ePosition))
             Attackers.Add(ePosition, New List(Of Combatant))
             Defenders.Add(ePosition, New List(Of Combatant))
@@ -8,13 +8,13 @@
 
 #Region "Reports"
     Private TurnNumber As Integer = 1
-    Private Reports As New Queue(Of String)
+    Private Reports As New Queue(Of BattlefieldReport)
     Private Sub AddReport(ByVal report As String)
-        Reports.Enqueue(TurnNumber.ToString("000") & " - " & report)
+        Reports.Enqueue(New BattlefieldReport(TurnNumber, report))
     End Sub
     Public Sub ShowReports()
         While Reports.Count > 0
-            Console.WriteLine(Reports.Dequeue)
+            Console.WriteLine(Reports.Dequeue.ToString)
         End While
     End Sub
 #End Region
@@ -56,10 +56,20 @@
     Public Sub Add(ByVal combatant As Combatant)
         combatant.Battlefield = Me
         GetCombatantList(combatant).Add(combatant)
+        combatant.BattlefieldSetup()
 
-        AddHandler combatant.IsMoved, AddressOf CombatantMoveHandler
-        AddHandler combatant.IsDestroyed, AddressOf CombatantDestroyedHandler
+        AddHandler combatant.IsMoved, AddressOf HandlerMove
+        AddHandler combatant.IsShocked, AddressOf HandlerShocked
+        AddHandler combatant.IsDestroyed, AddressOf HandlerDestroyed
+        AddHandler combatant.IsBodypartMissed, AddressOf HandlerMissed
+        AddHandler combatant.IsBodypartHit, AddressOf HandlerHit
+        AddHandler combatant.IsBodypartDestroyed, AddressOf HandlerBodypartDestroyed
     End Sub
+    Public Function Contains(ByVal combatant As Combatant)
+        If AttackersAll.Contains(combatant) Then Return True
+        If DefendersAll.Contains(combatant) Then Return True
+        Return False
+    End Function
 
     Public Function GetHighestSpeed() As Integer
         Dim highestSpeed As Integer = -1
@@ -71,10 +81,16 @@
                 highestSpeed = c.Speed
             End If
         Next
+        For Each c In DefendersAll
+            If c.Speed > highestSpeed Then
+                highestSpeedCombatant = c
+                highestSpeed = c.Speed
+            End If
+        Next
         Return highestSpeed
     End Function
 
-    Private Sub CombatantMoveHandler(ByVal combatant As Combatant, ByVal currentPosition As ePosition, ByVal targetPosition As ePosition)
+    Private Sub HandlerMove(ByVal combatant As Combatant, ByVal currentPosition As ePosition, ByVal targetPosition As ePosition)
         Dim targetList As List(Of Combatant) = GetCombatantList(combatant, currentPosition)
         Dim newTargetList As List(Of Combatant) = GetCombatantList(combatant, targetPosition)
         targetList.Remove(combatant)
@@ -82,11 +98,23 @@
 
         AddReport(combatant.Name & " moves from " & currentPosition.ToString & " to " & targetPosition.ToString & ".")
     End Sub
-    Private Sub CombatantDestroyedHandler(ByVal combatant As Combatant)
+    Private Sub HandlerShocked(ByVal combatant As Combatant, ByVal value As Integer)
+        AddReport(combatant.Name & " suffers " & value & " shock.")
+    End Sub
+    Private Sub HandlerDestroyed(ByVal combatant As Combatant)
         Dim targetList = GetCombatantList(combatant)
         targetList.Remove(combatant)
 
         AddReport(combatant.Name & " has been destroyed!!!")
+    End Sub
+    Private Sub HandlerMissed(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart)
+        AddReport(attacker.Name & " missed " & target.Name & "'s " & targetBp.Name & " with " & attack.Name & ".")
+    End Sub
+    Private Sub HandlerHit(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart, ByVal isFullHit As Boolean)
+        AddReport(attacker.Name & " hit " & target.Name & "'s " & targetBp.Name & " with " & attack.Name & "!")
+    End Sub
+    Private Sub HandlerBodypartDestroyed(ByVal target As Combatant, ByVal targetBp As Bodypart)
+        AddReport(target.Name & "'s " & targetBp.Name & " is destroyed!!!")
     End Sub
 #End Region
 
