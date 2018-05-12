@@ -30,11 +30,13 @@
         With total
             ._Name = name
             .BaseBodypart = baseBodypart
-            .Bodyparts.AddRange(bodyparts)
+            For Each bp In bodyparts
+                .Add(bp)
+            Next
         End With
         Return total
     End Function
-    Private Sub Save()
+    Public Sub Save()
         Dim partsPathname As String = "data/" & Name & "-Parts.txt"
         Dim partsRawAll As New List(Of Queue(Of String))
 

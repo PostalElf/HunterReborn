@@ -2,7 +2,7 @@
 #Region "Constructors"
     Public Shared Function Construct(ByVal rawdata As Queue(Of String)) As Bodypart
         Dim bp As New Bodypart
-        rawdata.Dequeue()         'remove header
+        bp._Name = rawdata.Dequeue()         'remove header
         While rawdata.Count > 0
             Dim ln As String() = rawdata.Dequeue.Split(":")
             Dim header As String = ln(0).Trim
@@ -43,7 +43,8 @@
             .Enqueue("Health:" & Health)
             .Enqueue("ShockAbsorb:" & ShockAbsorb)
             .Enqueue("ShockLoss:" & ShockLoss)
-            .Enqueue("Attack:" & Attack.Export)
+
+            If Attack Is Nothing = False Then .Enqueue("Attack:" & Attack.Export)
         End With
         Return total
     End Function
@@ -160,7 +161,7 @@
             RaiseEvent IsHit(attacker, attack, Owner, Me, isFullHit)
 
             'apply shock
-            Dim shock As Integer = Convert.ToInt32(damage * ShockAbsorb)
+            Dim shock As Integer = Convert.ToInt32(damage * (1 - ShockAbsorb))
             If shock <= 0 Then shock = 1
             Owner.shock += shock
 
@@ -169,7 +170,7 @@
                 Dim formerOwner As Combatant = Owner
                 Owner.Remove(Me)
                 RaiseEvent IsDestroyed(formerOwner, Me)
-                Owner.shock += ShockLoss
+                formerOwner.Shock += ShockLoss
             End If
         Else
             'attack misses

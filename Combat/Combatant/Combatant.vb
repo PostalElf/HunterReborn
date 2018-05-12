@@ -7,7 +7,7 @@
         End Get
     End Property
     Public Overrides Function ToString() As String
-        Return Name
+        Return Name & " [" & BattlefieldInitiative & "]"
     End Function
 #End Region
 

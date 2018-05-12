@@ -148,6 +148,15 @@
             End If
         End While
     End Sub
+    Public Function GetTargets(ByVal attacker As Combatant) As List(Of Combatant)
+        If TypeOf attacker Is CombatantAI Then
+            Return AttackersAll
+        ElseIf TypeOf attacker Is CombatantPlayer Then
+            Return DefendersAll
+        Else
+            Throw New Exception("Unrecognised combatant type")
+        End If
+    End Function
     Public Function GetTargetsWithinRange(ByVal attacker As Combatant, ByVal attack As Attack) As List(Of Combatant)
         Dim minRange As Integer = attacker.BattlefieldPosition + attack.MinRange
         If minRange < 0 Then minRange = 0

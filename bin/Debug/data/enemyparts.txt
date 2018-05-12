@@ -4,7 +4,7 @@ Armour: -5
 Health: 40
 ShockAbsorb: 0.1
 ShockLoss: 25
-Attack: Claws|0|0|3|1|90|45|0|15|10
+Attack: Claws|0|1|3|1|90|45|0|15|10
 
 [Goblin Torso]
 Agility: -5

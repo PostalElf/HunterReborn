@@ -25,10 +25,10 @@
 
         Return Construct(enemyName, baseBodypart, bodyparts)
     End Function
-    Public Shared Function Construct(ByVal name As String, ByVal baseBodypart As Bodypart, ByVal bodyparts As List(Of Bodypart)) As CombatantAI
+    Public Shared Function Construct(ByVal enemyName As String, ByVal baseBodypart As Bodypart, ByVal bodyparts As List(Of Bodypart)) As CombatantAI
         Dim total As New CombatantAI
         With total
-            ._Name = name
+            ._Name = enemyName
             .BaseBodypart = baseBodypart
             For Each bp In bodyparts
                 .Add(bp)
@@ -60,10 +60,18 @@
                 targetBodypart.IsAttacked(Me, CurrentAttack)
             Else
                 'target out of range; move
-                '#TODO
-
-
-
+                Dim targetDistance As ePosition
+                If distance < CurrentAttack.MinRange Then
+                    'move further
+                    targetDistance = BattlefieldPosition + 1
+                ElseIf distance > CurrentAttack.MaxRange Then
+                    'move nearer
+                    targetDistance = BattlefieldPosition - 1
+                End If
+                If targetDistance < ePosition.Close Then targetDistance = ePosition.Close
+                If targetDistance > ePosition.Back Then targetDistance = ePosition.Back
+                If targetDistance = BattlefieldPosition Then Return False
+                PerformsMove(targetDistance)
             End If
 
             'reset attack and target
@@ -81,6 +89,7 @@
     End Sub
     Private Sub SetCurrentTarget()
         CurrentTarget = GetRandom(Battlefield.GetTargetsWithinRange(Me, CurrentAttack))
+        If CurrentTarget Is Nothing Then CurrentTarget = GetRandom(Battlefield.GetTargets(Me))
     End Sub
 #End Region
 End Class
