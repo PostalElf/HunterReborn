@@ -28,6 +28,25 @@
             Case "Attack" : Attack = Attack.Construct(entry)
         End Select
     End Sub
+    Public Function Export() As Queue(Of String)
+        Dim total As New Queue(Of String)
+        With total
+            .Enqueue(Name)
+            .Enqueue("Weight:" & BonusWeight)
+            .Enqueue("Carry:" & BonusCarry)
+            .Enqueue("Speed:" & BonusSpeed)
+            .Enqueue("Dodge:" & BonusDodge)
+            .Enqueue("ShockCapacity:" & BonusShockCapacity)
+
+            .Enqueue("Agility:" & Agility)
+            .Enqueue("Armour:" & Armour)
+            .Enqueue("Health:" & Health)
+            .Enqueue("ShockAbsorb:" & ShockAbsorb)
+            .Enqueue("ShockLoss:" & ShockLoss)
+            .Enqueue("Attack:" & Attack.Export)
+        End With
+        Return total
+    End Function
 #End Region
 
 #Region "Personal Identifiers"

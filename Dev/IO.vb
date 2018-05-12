@@ -97,9 +97,12 @@
         If matchFound = False Then all.Add(raw)
 
         'write all
+        BracketFileSaveAll(pathname, all)
+    End Sub
+    Public Shared Sub BracketFileSaveAll(ByVal pathname As String, ByVal raw As List(Of Queue(Of String)))
         Try
             Using sw As New StreamWriter(pathname, False)
-                For Each q As Queue(Of String) In all
+                For Each q As Queue(Of String) In raw
                     sw.WriteLine("[" & q.Dequeue & "]")
                     While q.Count > 0
                         sw.WriteLine(q.Dequeue)
@@ -113,6 +116,7 @@
             Exit Sub
         End Try
     End Sub
+
 
     Public Shared Function SimpleFilegetAll(ByVal pathname As String) As List(Of String)
         Dim total As New List(Of String)

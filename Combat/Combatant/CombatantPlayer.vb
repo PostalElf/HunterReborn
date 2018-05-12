@@ -26,8 +26,40 @@
         Return Construct(name, baseBodypart, bodyparts)
     End Function
     Public Shared Function Construct(ByVal name As String, ByVal baseBodypart As Bodypart, ByVal bodyparts As List(Of Bodypart)) As CombatantPlayer
-
+        Dim total As New CombatantPlayer
+        With total
+            ._Name = name
+            .BaseBodypart = baseBodypart
+            .Bodyparts.AddRange(bodyparts)
+        End With
+        Return total
     End Function
+    Private Sub Save()
+        Dim partsPathname As String = "data/" & Name & "-Parts.txt"
+        Dim partsRawAll As New List(Of Queue(Of String))
+
+        Dim designPathname As String = "data/" & Name & "-Design.txt"
+        Dim designRaw As New Queue(Of String)
+        With designRaw
+            .Enqueue(Name)
+
+            'write baseBodypart
+            Dim baseBodypartRaw As Queue(Of String) = BaseBodypart.Export
+            baseBodypartRaw.Dequeue()
+            While baseBodypartRaw.Count > 0
+                .Enqueue(baseBodypartRaw.Dequeue)
+            End While
+
+            'write each bodypart
+            For Each bp In Bodyparts
+                .Enqueue("Bodypart:" & bp.Name)         'record name of bodypart to designRaw
+                partsRawAll.Add(bp.Export)              'write bodypart spec to partsRawAll
+            Next
+        End With
+
+        IO.BracketFilesave(designPathname, designRaw)
+        IO.BracketFileSaveAll(partsPathname, partsRawAll)
+    End Sub
 #End Region
 
 
